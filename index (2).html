@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fichas de Lectura · Picando Letras</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --tinta:#1c1c2e;--papel:#f7f4ef;--calido:#ede8df;--borde:#ddd7cc;--muted:#7a7060;
+  --acento:#b84a2e;--acento-s:#f3e6e2;
+  --verde:#2e7d52;--verde-s:#e1f0e8;
+  --azul:#1a5276;--azul-s:#ddeaf5;
+  --morado:#5b3a8a;--morado-s:#ede5f8;
+  --naranja:#c47a20;--naranja-s:#fdf0dc;
+  --serif:Georgia,serif;--sans:system-ui,sans-serif;
+}
+body{background:var(--papel);color:var(--tinta);font-family:var(--sans);min-height:100vh}
+
+/* HEADER */
+.site-header{background:var(--tinta);color:var(--papel);padding:1.5rem 1.5rem 1.2rem;border-left:6px solid var(--acento)}
+.site-header h1{font-family:var(--serif);font-size:clamp(1.3rem,3vw,1.9rem);font-weight:400}
+.site-header p{font-size:13px;color:#a09880;margin-top:4px}
+.header-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.meta-pill{font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid #3a3a55;color:#c8c0b0}
+
+/* FILTROS */
+.filtros-bar{background:white;border-bottom:1px solid var(--borde);padding:.9rem 1.5rem;position:sticky;top:0;z-index:100;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fg{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.fb{padding:5px 12px;border:1.5px solid var(--borde);border-radius:16px;background:transparent;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fb:hover{border-color:var(--acento);color:var(--acento)}
+.fb.on{background:var(--tinta);border-color:var(--tinta);color:white}
+.sep{width:1px;height:24px;background:var(--borde)}
+.bw{position:relative;flex:1;min-width:160px}
+.bw input{width:100%;padding:6px 12px 6px 30px;border:1.5px solid var(--borde);border-radius:16px;font-family:var(--sans);font-size:13px;outline:none;background:var(--papel);color:var(--tinta)}
+.bw input:focus{border-color:var(--acento)}
+.bw::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px}
+.conteo{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:1.5rem;max-width:1200px;margin:0 auto}
+.card{background:white;border:1px solid var(--borde);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .18s;display:flex;flex-direction:column}
+.card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-2px)}
+.cinta{height:5px}
+.nv-preescolar .cinta{background:var(--verde)}
+.nv-primaria .cinta{background:var(--azul)}
+.nv-secundaria .cinta{background:var(--morado)}
+.nv-prepa .cinta{background:var(--acento)}
+.nv-adultos .cinta{background:var(--naranja)}
+.nv-multi .cinta{background:linear-gradient(90deg,var(--verde),var(--azul),var(--morado),var(--acento))}
+.cbody{padding:1rem;flex:1;display:flex;flex-direction:column;gap:6px}
+.cnum{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctit{font-family:var(--serif);font-size:1rem;line-height:1.3;color:var(--tinta)}
+.clibro{font-size:12px;color:var(--muted);font-style:italic}
+.ctags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.t-preescolar{background:var(--verde-s);color:var(--verde)}
+.t-primaria{background:var(--azul-s);color:var(--azul)}
+.t-secundaria{background:var(--morado-s);color:var(--morado)}
+.t-prepa{background:var(--acento-s);color:var(--acento)}
+.t-adultos{background:var(--naranja-s);color:var(--naranja)}
+.t-multi{background:#f0f0f0;color:#444}
+.t-dur{background:#f0f0f0;color:#555}
+.t-area{background:#e8f0e8;color:#2d5a2d}
+.cabrir{display:block;width:100%;padding:8px;background:var(--calido);border:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--tinta);cursor:pointer;text-align:center;transition:background .15s}
+.cabrir:hover{background:var(--acento);color:white}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(28,28,46,.65);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;backdrop-filter:blur(2px)}
+.overlay.vis{display:flex}
+.modal{background:white;border-radius:12px;width:100%;max-width:760px;margin:auto;overflow:hidden;animation:up .22s ease}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.mhead{background:var(--tinta);color:white;padding:1.3rem 1.5rem 1rem;position:relative}
+.mcinta{height:4px;position:absolute;top:0;left:0;right:0}
+.mnum{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#a09880;margin-bottom:4px}
+.mtit{font-family:var(--serif);font-size:1.3rem;font-weight:400;line-height:1.2}
+.mlibro{font-size:13px;color:#c8c0b0;margin-top:4px;font-style:italic}
+.mmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mclose{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.12);border:none;color:white;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.mclose:hover{background:rgba(255,255,255,.28)}
+.mbody{padding:1.4rem 1.5rem}
+
+/* Contenido de la ficha — respeta estructura original */
+.ficha-content h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:1.2rem 0 .6rem;padding-bottom:4px;border-bottom:1px solid var(--borde);display:flex;align-items:center;gap:6px}
+.ficha-content h3:first-child{margin-top:0}
+.ficha-content h4{font-size:13px;font-weight:700;color:var(--tinta);margin:.8rem 0 .3rem}
+.ficha-content p{font-size:13px;line-height:1.7;color:#3a3530;margin-bottom:.5rem}
+.ficha-content ul{padding-left:1.3rem;margin-bottom:.6rem}
+.ficha-content li{font-size:13px;line-height:1.7;color:#3a3530;margin-bottom:2px}
+.ficha-content .nota{font-size:12px;color:var(--muted);font-style:italic;border-left:2px solid var(--borde);padding-left:8px;margin:.6rem 0}
+.ficha-content .tabla-instructivo{width:100%;border-collapse:collapse;margin:.5rem 0;font-size:13px}
+.ficha-content .tabla-instructivo th{text-align:left;padding:6px 10px;background:var(--calido);font-weight:600;font-size:11px;border:1px solid var(--borde)}
+.ficha-content .tabla-instructivo td{padding:6px 10px;border:1px solid var(--borde);color:#3a3530;vertical-align:top}
+.ficha-content .tabla-instructivo td:first-child{font-weight:600;white-space:nowrap;background:#faf7f2}
+
+/* Ficha técnica como tabla */
+.ftable{width:100%;border-collapse:collapse;margin-bottom:.4rem;font-size:12.5px}
+.ftable td{padding:4px 10px;border-bottom:1px solid var(--borde);vertical-align:top;line-height:1.5}
+.ftable td:first-child{font-weight:600;color:var(--tinta);width:38%;white-space:nowrap}
+.ftable td:last-child{color:#3a3530}
+
+/* Materiales chips */
+.mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:.3rem}
+.mat{background:var(--calido);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--tinta)}
+
+/* Acervo */
+.acervo{background:#f8f5f0;border-radius:8px;padding:10px 14px}
+.acervo li{font-size:12.5px;line-height:1.6;color:#3a3530;margin-bottom:2px}
+
+/* Elaborado por */
+.elaborado{font-size:11.5px;color:var(--muted);border-top:1px solid var(--borde);padding-top:8px;margin-top:1rem;font-style:italic}
+
+/* Favoritos */
+.fav-btn{position:absolute;top:14px;right:46px;background:rgba(255,255,255,.12);border:none;color:#c8c0b0;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.fav-btn:hover{background:rgba(255,255,255,.25);color:#f0c040}
+.fav-btn.on{color:#f0c040}
+.card-fav{position:absolute;top:10px;right:10px;background:transparent;border:none;font-size:14px;cursor:pointer;opacity:.5;transition:all .15s;line-height:1}
+.card-fav:hover,.card-fav.on{opacity:1}
+.cbody-wrap{position:relative}
+
+/* Filtro favoritos */
+.fav-only-btn{padding:5px 12px;border:1.5px solid var(--borde);border-radius:16px;background:transparent;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.fav-only-btn:hover{border-color:#c47a20;color:#c47a20}
+.fav-only-btn.on{background:#c47a20;border-color:#c47a20;color:white}
+
+.vacio{text-align:center;padding:3rem 1rem;color:var(--muted);grid-column:1/-1}
+@media(max-width:600px){.grid{padding:1rem;grid-template-columns:1fr}.mbody{padding:1rem}.filtros-bar{padding:.8rem 1rem}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Fichas de Lectura</h1>
+  <p>Estrategias y actividades de fomento a la lectura</p>
+  <div class="header-meta">
+    <span class="meta-pill">27 fichas</span>
+    <span class="meta-pill">Preescolar · Primaria · Secundaria · Preparatoria · Adultos</span>
+    <span class="meta-pill">Picando Letras · Ciénega, Durango</span>
+  </div>
+</header>
+
+<div class="filtros-bar">
+  <div class="fg">
+    <span class="fl">Nivel</span>
+    <button class="fb on" data-val="todos" onclick="filtrar(this)">Todos</button>
+    <button class="fb" data-val="preescolar" onclick="filtrar(this)">Preescolar</button>
+    <button class="fb" data-val="primaria" onclick="filtrar(this)">Primaria</button>
+    <button class="fb" data-val="secundaria" onclick="filtrar(this)">Secundaria</button>
+    <button class="fb" data-val="prepa" onclick="filtrar(this)">Prepa</button>
+    <button class="fb" data-val="adultos" onclick="filtrar(this)">Adultos</button>
+  </div>
+  <div class="sep"></div>
+  <button class="fav-only-btn" id="favBtn" onclick="toggleFavFilter()">⭐ Favoritas</button>
+  <div class="sep"></div>
+  <div class="bw"><input type="text" placeholder="Buscar por libro, autor o tema…" oninput="buscar(this.value)"></div>
+  <span class="conteo" id="conteo">27 fichas</span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="overlay" id="overlay" onclick="cerrarSiOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="mhead">
+      <div class="mcinta" id="mCinta"></div>
+      <div class="mnum" id="mNum"></div>
+      <div class="mtit" id="mTit"></div>
+      <div class="mlibro" id="mLibro"></div>
+      <div class="mmeta" id="mMeta"></div>
+      <button class="fav-btn" id="mFavBtn" onclick="toggleFav(null, true)" title="Marcar favorita">☆</button>
+      <button class="mclose" onclick="cerrar()">✕</button>
+    </div>
+    <div class="mbody" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+// ── COLORES Y ETIQUETAS ──────────────────
+const COL={preescolar:'#2e7d52',primaria:'#1a5276',secundaria:'#5b3a8a',prepa:'#b84a2e',adultos:'#c47a20',multi:'linear-gradient(90deg,#2e7d52,#1a5276,#5b3a8a,#b84a2e)'};
+const NOM={preescolar:'Preescolar',primaria:'Primaria',secundaria:'Secundaria',prepa:'Preparatoria',adultos:'Jóvenes y adultos',multi:'Múltiples niveles'};
+
+// ── FAVORITOS (localStorage) ─────────────
+function getFavs(){try{return JSON.parse(localStorage.getItem('pl_favs')||'[]')}catch{return[]}}
+function setFavs(a){try{localStorage.setItem('pl_favs',JSON.stringify(a))}catch{}}
+function isFav(id){return getFavs().includes(id)}
+function toggleFav(id, fromModal=false){
+  if(fromModal) id=modalFichaId;
+  const favs=getFavs();
+  const idx=favs.indexOf(id);
+  if(idx>=0) favs.splice(idx,1); else favs.push(id);
+  setFavs(favs);
+  // actualizar estrella en la tarjeta
+  const cardBtn=document.querySelector(`.card-fav[data-id="${id}"]`);
+  if(cardBtn) cardBtn.classList.toggle('on', favs.includes(id));
+  // actualizar estrella en el modal
+  const mfb=document.getElementById('mFavBtn');
+  if(mfb){mfb.textContent=favs.includes(id)?'★':'☆';mfb.classList.toggle('on',favs.includes(id))}
+  // re-render si filtro de favoritas está activo
+  if(soloFavs) renderGrid();
+}
+
+// ── ESTADO ───────────────────────────────
+let fNivel='todos', fBusq='', soloFavs=false, modalFichaId=null;
+
+function toggleFavFilter(){
+  soloFavs=!soloFavs;
+  document.getElementById('favBtn').classList.toggle('on',soloFavs);
+  renderGrid();
+}
+
+// ── DATOS ────────────────────────────────
+// Cada ficha tiene: id, titulo, libro, autor, nivel, duracion, area, meta{}, html (contenido íntegro)
+const FICHAS=[
+{id:1,titulo:'Caminar, sentir y acompañar',libro:'Camino a casa',autor:'Jairo Buitrago / il. Rafael Yockteng',nivel:'primaria',duracion:'60 minutos',area:'Comunicación / Tutoría / Educación emocional',
+meta:{Libro:'Camino a casa',Autor:'Jairo Buitrago',Ilustrador:'Rafael Yockteng',Área:'Comunicación / Tutoría / Educación emocional',Nivel:'Primaria (1.º – 3.º grado)',Participantes:'Grupo clase',Duración:'60 minutos','Elaborado por':'Mtras. María Jazmín Ortiz Muñoz y Mara García Romero'},
+html:`
+<h3>Reseña</h3>
+<p>El camino a casa, del autor colombiano Jairo Buitrago, es un cuento ilustrado que narra el recorrido de un niño que vuelve a su hogar acompañado por un león. A lo largo de la historia, el lector descubre que este animal no es real, sino una representación simbólica del padre del niño, quien no está presente físicamente. El relato aborda de manera sensible el tema de la ausencia paterna, mostrando cómo el niño enfrenta la soledad y el miedo durante su trayecto diario. El león simboliza la protección, el cariño y la fortaleza que el niño necesita para sentirse seguro. Es una obra recomendada por su mensaje, sensibilidad y valor artístico.</p>
+<h3>Propósito</h3>
+<p>La presente actividad propone un espacio dinámico, lúdico y participativo donde los estudiantes explorarán las emociones que aparecen en el cuento y las relacionarán con sus propias experiencias. Mediante el juego, el movimiento, el diálogo y la expresión artística, los niños podrán identificar lo que sienten, expresarlo con libertad y descubrir que no están solos en su camino emocional.</p>
+<h3>Desarrollo</h3>
+<h4>Activación emocional (10 min) — Dinámica: Caras y cuerpos</h4>
+<ul><li>El docente dice una emoción (tristeza, alegría, miedo).</li><li>Los estudiantes la representan con gestos y movimientos corporales.</li><li>Pregunta guía: ¿En qué parte del cuerpo sentimos esa emoción?</li></ul>
+<h4>Lectura interactiva (15 min)</h4>
+<ul><li>Cada vez que la niña imagina al león, los niños levantan las manos.</li><li>Cuando la niña parece triste, ponen la mano en el corazón.</li><li>Preguntas breves: ¿Qué emoción aparece ahora? ¿El león ayuda a la niña? ¿Cómo?</li></ul>
+<h4>Juego emocional (10 min) — Dinámica: El dado de las emociones</h4>
+<ul><li>Se lanza un dado o se sacan tarjetas con emociones.</li><li>Según la emoción que salga, el niño responde: «Me siento ___ cuando…» y «Cuando me siento así, me ayuda…».</li></ul>
+<h4>Creación artística (15 min) — Mi camino emocional</h4>
+<ul><li>Dibuja un camino con tres momentos: cuando estoy triste o con miedo; lo que me acompaña; cómo me siento al final.</li><li>Colorean cada momento con un color emocional.</li></ul>
+<h4>Cierre afectivo (10 min) — La palabra que abriga</h4>
+<ul><li>En círculo, cada niño dice una palabra bonita para un compañero: «Te acompaño», «No estás solo», «Estoy contigo».</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro Camino a casa</span><span class="mat">Hojas blancas</span><span class="mat">Colores / crayones</span><span class="mat">Tarjetas o dado de emociones</span></div>`
+},
+{id:2,titulo:'¿Quién soy yo?',libro:'¿Quién soy yo?',autor:'Paula Vázquez',nivel:'multi',duracion:'60–90 minutos',area:'Identidad y autoconocimiento',
+meta:{Libro:'¿Quién soy yo?',Autor:'Paula Vázquez',Participantes:'20–25',Duración:'60–90 minutos',Nivel:'Niñas, niños y adolescentes (adaptable a jóvenes y adultos)'},
+html:`
+<h3>Reseña</h3>
+<p>Es una obra reflexiva que invita a lectoras y lectores a cuestionarse sobre su identidad, sus emociones y los elementos que los conforman como personas. A través de un lenguaje sencillo y cercano, el texto plantea preguntas profundas que motivan la introspección y el reconocimiento de uno mismo.</p>
+<h3>Propósitos</h3>
+<ul><li>Que los alumnos reflexionen sobre su identidad personal a partir de la lectura, reconociendo sus gustos, emociones, cualidades y experiencias, para expresarse mediante la escritura creativa y fortalecer el autoconocimiento, la autoestima y el respeto por la diversidad de los demás.</li><li>Brindar a los docentes una estrategia didáctica que favorezca el desarrollo del autoconocimiento y la expresión emocional del alumnado, promueva la reflexión sobre la identidad personal y fortalezca habilidades de lectura, escritura creativa, escucha activa y respeto por la diversidad dentro del aula.</li></ul>
+<h3>Desarrollo</h3>
+<ul><li>Abre un diálogo con los participantes preguntándoles qué creen que los define como personas y si alguna vez se han preguntado quiénes son más allá de su nombre o edad.</li><li>Realiza la lectura en voz alta del texto. Detente en algunos fragmentos para permitir que los participantes comenten libremente lo que les hace sentir o pensar.</li><li>Invita al grupo a reflexionar sobre las preguntas que aparecen en la lectura y sobre el concepto de identidad, considerando aspectos como gustos, emociones, recuerdos, familia, amistades y experiencias.</li><li>Propicia una conversación grupal acerca de cómo las personas cambiamos con el tiempo y cómo nuestra identidad se construye a partir de lo que vivimos, sentimos y aprendemos.</li><li>Pide a los participantes que elaboren una lista con al menos cinco palabras que los describan, tres cosas que les gusten de sí mismos y tres cosas que los hagan únicos o especiales.</li><li>A partir de esa lista, motívalos a escribir un texto breve en primera persona que responda a la pregunta «¿Quién soy yo?», utilizando frases cortas, dibujos, metáforas o comparaciones.</li><li>Al finalizar, invita a quienes lo deseen a compartir su texto en voz alta. Fomenta la escucha respetuosa y el reconocimiento de la diversidad de identidades dentro del grupo.</li><li>Cierra la actividad destacando que no existe una sola respuesta correcta a la pregunta ¿Quién soy yo?, y que la identidad es un proceso que se construye y transforma a lo largo de la vida.</li></ul>
+<h3>Acervo sugerido</h3>
+<div class="acervo"><ul><li>Paula Vázquez, ¿Quién soy yo?</li><li>Benito Taibo, Persona normal</li><li>Elisa Ramírez Castañeda, No siempre fueron así</li><li>Diccionarios de emociones o identidad</li></ul></div>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas blancas o fichas de trabajo</span><span class="mat">Lápices o bolígrafos</span><span class="mat">Colores (opcional)</span></div>`
+},
+{id:3,titulo:'Nuestros paisajes de palabras',libro:'(Libro álbum — mar de palabras)',autor:'',nivel:'preescolar',duracion:'1 sesión (50 min.)',area:'Expresión artística y prelectura',
+meta:{Nivel:'Primera infancia',Sesiones:'1 sesión (50 min.)',Participantes:'Grupo clase',Objetivo:'Fomentar el amor por la lectura y la expresión artística a través de la creación de un objeto tridimensional con materiales reciclados y fragmentos de textos.'},
+html:`
+<h3>Reseña</h3>
+<p>Una niña pequeña viaja a través de un "mar de palabras" sobre una balsa para invitar a un niño a acompañarla en una aventura. Ella se define a sí misma como alguien que proviene de un mundo de historias y, a medida que avanzan, recorren montañas de fantasía, castillos de cuentos de hadas y cuevas de misterio. Juntos, descubren que la imaginación es un territorio libre donde cualquiera puede habitar.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<ul><li>Realizar una lectura pausada del libro. Es vital mostrar las ilustraciones de cerca, ya que el texto "escondido" en los dibujos es parte de la narrativa.</li><li>Preguntar a los niños: ¿De qué creen que estamos hechos nosotros? ¿De recuerdos? ¿De juegos? ¿De cuentos? ¿Notaron que las montañas y las olas están hechas de letras?</li><li>Entregar a los niños recortes de periódicos viejos o libros que iban a ser desechados. Pedirles que recorten palabras que les gusten o les suenen "mágicas".</li></ul>
+<h4>Desarrollo</h4>
+<ul><li>Presentar el material reciclado: cartón, envases, periódicos, revistas, folletos.</li><li>Los alumnos elegirán un "paisaje" de su propia historia: una montaña de valentía, un mar de sueños, un bosque de risas.</li><li>Forrarán sus estructuras de material reciclado con trozos de papel escrito. Por ejemplo, si hacen una montaña de cartón, la cubrirán con páginas de un diccionario viejo o recortes de poemas.</li><li>Cada niño escribe una frase corta que lo represente: «Yo soy un niño/a hecho de...»</li></ul>
+<h4>Cierre</h4>
+<ul><li>Los alumnos organizan sus esculturas en el salón para crear un gran paisaje colectivo.</li><li>Cada alumno, con ayuda de su maestra o maestro, creará una pequeña figura humana usando alambre, cartón o tubos de papel higiénico, recubierta de palabras recortadas. Este personaje habitará el paisaje creado.</li><li>Compartir en círculo qué sintieron al convertirse en libros y cómo el material que otros consideran basura se transformó en arte.</li></ul>`
+},
+{id:4,titulo:'Historias para recobrar la memoria: Una tarde de agosto',libro:'El principio del placer',autor:'José Emilio Pacheco',nivel:'adultos',duracion:'120 min.',area:'Creación literaria y memoria',
+meta:{'Libro base':'El principio del placer (cuento «Una tarde de agosto»)',Autor:'José Emilio Pacheco',Participantes:'15 a 20',Duración:'120 min.',Nivel:'Jóvenes y adultos'},
+html:`
+<h3>Propósito</h3>
+<p>Taller de creación literaria y ensamblaje visual, dirigido a jóvenes y adultos interesados en la narrativa breve y la recuperación de la memoria cotidiana a través de objetos encontrados. La literatura de José Emilio Pacheco invita a explorar la pérdida de la inocencia y la nostalgia de una Ciudad de México que ya no existe.</p>
+<h3>Desarrollo</h3>
+<ul><li>Inicia invitando a los asistentes a recordar un objeto de su infancia que haya tenido un valor especial, o un momento de sus vacaciones escolares que recuerden con melancolía.</li><li>Abre el diálogo a partir de las siguientes preguntas: ¿Por qué los recuerdos de la niñez suelen sentirse agridulces? ¿Cómo cambia nuestra percepción de las personas conforme crecemos? Si pudieras guardar un aroma o un sonido de tu adolescencia en una caja, ¿cuál sería?</li><li>Invítalos a leer colectivamente el cuento «Una tarde de agosto». Compartan sus impresiones sobre la atmósfera de la Ciudad de México y el sentimiento de exclusión del protagonista.</li><li>Invita a los participantes a identificar una «escena perdida» de su propia vida: un momento que no tiene fotos, pero que vive en su memoria. Pídeles que escriban una lista de cinco elementos sensoriales de esa escena: un color, un clima, un objeto, un sonido, un sentimiento.</li><li>Invita a los participantes a elaborar una «Caja de Memoria» o diorama, donde cada uno de los cinco elementos sea representado visualmente para reconstruir esa tarde olvidada.</li></ul>
+<h3>Procedimiento</h3>
+<ul><li>Para cada participante se dispondrá de una caja de madera o cartón pequeña.</li><li>En la tapa exterior se colocará una etiqueta con el título inventado por el autor para su recuerdo.</li><li>Los participantes usarán recortes de periódicos viejos, botones, elementos naturales (hojas secas, tierra) y miniaturas que representen sus cinco palabras clave.</li><li>Se pueden usar transparencias o acetatos para crear capas de profundidad, simulando la neblina del tiempo.</li><li>Al concluir, se realizará una «galería de tardes», donde cada autor compartirá brevemente el contexto de su caja sin necesidad de explicarlo todo, dejando que el objeto hable por sí mismo.</li></ul>
+<h3>Acervo sugerido</h3>
+<div class="acervo"><ul><li>José Emilio Pacheco, El principio del placer, Era</li><li>José Emilio Pacheco, Las batallas en el desierto, Era</li><li>Fotografía histórica de la Ciudad de México (Archivo Casasola)</li></ul></div>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cajas pequeñas de cartón o madera</span><span class="mat">Pegamento blanco y silicón frío</span><span class="mat">Tijeras y cúteres</span><span class="mat">Recortes de revistas antiguas o fotocopias en b/n</span><span class="mat">Elementos pequeños: cuentas, arena, hilos, llaves viejas</span><span class="mat">Marcadores de punta fina</span><span class="mat">Papel artesanal o papel de estraza</span></div>`
+},
+{id:5,titulo:'Historias para comprender a un «asesino»',libro:'El diario de un gato asesino',autor:'Anne Fine · Fondo de Cultura Económica',nivel:'primaria',duracion:'90 min.',area:'Punto de vista e ironía',
+meta:{Libro:'El diario de un gato asesino',Autor:'Anne Fine',Editorial:'Fondo de Cultura Económica',Participantes:'15–20',Duración:'90 min.',Nivel:'Niños de 8 a 12 años y jóvenes lectores'},
+html:`
+<h3>Propósito</h3>
+<p>Taller que combina la lectura de diario y la expresión creativa a través de la elaboración de un «expediente de defensa» o diario visual. Está diseñado para que los participantes exploren la ironía, el punto de vista y la empatía hacia las mascotas.</p>
+<h3>Desarrollo</h3>
+<ul><li>Inicia invitando a los asistentes a compartir anécdotas sobre sus mascotas: ¿alguna vez han hecho algo que parezca «malo» pero que para ellos sea natural? (traer un pájaro, romper un mueble, etc.).</li><li>Abre el diálogo con las siguientes preguntas: ¿Por qué creemos que los gatos son «fríos» o «malvados»? ¿Cómo contaría un gato su versión de los hechos? ¿Qué es lo más divertido de vivir con un animal travieso?</li><li>Invítalos a leer fragmentos clave del libro, especialmente los días lunes (el incidente del pájaro) y el jueves (el incidente del conejo Tambor). Compartan las reacciones de la familia de Tuffy frente a las de él mismo.</li><li>Invita a los participantes a imaginar un «crimen» cometido por una mascota real o ficticia. Pídeles que hagan una lista de cinco excusas o justificaciones que el animal daría para defenderse.</li><li>Invita a los participantes a elaborar un Diario de Evidencias, donde cada excusa será la base para una ilustración o collage que muestre la «verdadera» historia.</li></ul>
+<h3>Procedimiento</h3>
+<ul><li>Para cada diario se utilizarán seis hojas de papel kraft o cartulina de colores.</li><li>En la primera página irá el título del diario y un «Retrato del Culpable».</li><li>Para ilustrar el interior, los participantes usarán recortes de periódicos, huellas pintadas, hilos y dibujos de las «víctimas».</li><li>Se pueden agregar texturas como plumas o retazos de tela para darle realismo al diario del gato.</li><li>Al concluir, se presentarán los «expedientes» al grupo y se hará un juicio simulado para decidir si el gato es culpable o simplemente un gato.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas de papel kraft o cartulina</span><span class="mat">Plumas de aves sintéticas</span><span class="mat">Lana o hilos gruesos</span><span class="mat">Marcadores negros y rojos</span><span class="mat">Pegamento y tijeras</span><span class="mat">Revistas viejas para recortar</span><span class="mat">Sellos de goma o esponjas para hacer huellas</span></div>`
+},
+{id:6,titulo:'Historias que hacen latir el corazón',libro:'El corazón y la botella',autor:'Oliver Jeffers',nivel:'primaria',duracion:'50 minutos',area:'Educación emocional',
+meta:{Libro:'El corazón y la botella',Autor:'Oliver Jeffers',Nivel:'Primaria (4.º grado)',Participantes:'Grupo clase',Duración:'50 minutos',Modalidad:'Lectura guiada, reflexión colectiva y actividad creativa'},
+html:`
+<h3>Propósito</h3>
+<p>Fomentar el gusto por la lectura a través de una experiencia emocionalmente significativa.</p>
+<h3>Reseña</h3>
+<p>El corazón en una botella, de Oliver Jeffers, aborda de manera sencilla uno de los procesos más complejos de la experiencia humana: el duelo y el cierre emocional. Una niña curiosa, ante una dolorosa pérdida, decide guardar el corazón en una botella para no volver a sentir dolor. El libro muestra cómo al protegerse emocionalmente renuncia a muchas cosas. La aparición de otra niña igualmente curiosa funciona como un espejo del pasado y como una posibilidad de sanación. Este libro invita a reflexionar sobre cómo el dolor no se supera cerrándose, sino volviendo a abrirse al mundo.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<ul><li>Desarrollar con los alumnos la observación del libro sin leerlo y comentar: ¿Qué creen que representa un corazón dentro de una botella? ¿Por qué alguien querría guardar su corazón?</li><li>Comentar con los alumnos alguna experiencia en la que algo haya despertado mucha curiosidad.</li><li>Organizar a los alumnos en semicírculo para la lectura.</li></ul>
+<h4>Desarrollo</h4>
+<ul><li>Realizar la lectura en voz alta, mostrando las ilustraciones.</li><li>Al inicio: identificar cómo el papá influye en la curiosidad de la niña.</li><li>En la pérdida: observar cambios en imágenes y actitud del personaje.</li><li>En la botella: reflexionar qué se gana y qué se pierde al guardar el corazón.</li><li>¿Qué cambió en la niña antes y después de guardar su corazón? ¿Qué papel tuvo la lectura al inicio y al final de la historia? ¿Por qué creen que otra niña fue quien pudo ayudarla?</li></ul>
+<h4>Cierre</h4>
+<ul><li>Los alumnos dibujan una botella y escriben dentro: algo que les da miedo perder, y algo que la lectura les ayuda a sentir o recordar.</li><li>De manera voluntaria, algunos comparten su dibujo.</li><li>Retomar el título de la actividad y concluir: «Las historias hacen latir el corazón porque nos recuerdan quiénes somos, incluso cuando creemos haber dejado de sentir».</li><li>Se invita a los alumnos a elegir un libro que despierte su curiosidad durante la semana.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">El corazón y la botella (Oliver Jeffers)</span><span class="mat">Hojas blancas</span><span class="mat">Lápices y colores</span></div>`
+},
+{id:7,titulo:'Conversaciones y discusiones',libro:'Conversaciones y discusiones',autor:'Alejandro Magallanes (2012)',nivel:'preescolar',duracion:'25–30 min.',area:'Comunicación y convivencia',
+meta:{Libro:'Conversaciones y discusiones','Autor e ilustrador':'Alejandro Magallanes','Año de publicación':'2012',Género:'Cuento / Álbum ilustrado','Nivel sugerido':'1.º a 3.º',Participantes:'20 niños',Duración:'25–30 min.','Dirigido a':'Niños de 5, 6, 7 y 8 años'},
+html:`
+<h3>Propósito</h3>
+<p>Que las niñas y niños expresen ideas y emociones, aprendan a escuchar a otros, reconozcan que hablar con respeto es importante y distingan entre hablar tranquilos y hablar enojados.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<ul><li>Preguntar a los alumnos: ¿Te gusta hablar con tus amigos? ¿Cómo te sientes cuando alguien te escucha? ¿Qué pasa cuando dos personas quieren hablar al mismo tiempo?</li></ul>
+<h4>Desarrollo</h4>
+<ul><li>Leer el cuento mostrando las imágenes y cambiando el tono de voz.</li><li>Cuestionar con las siguientes preguntas: ¿Los personajes están hablando tranquilos? ¿Están enojados o calmados?</li><li>Observar las imágenes y responder con una carita la emoción que las ilustraciones provocan (felicidad y enojo).</li><li>Ejemplos de contraste: hablar suave / escuchar / esperar turnos vs. hablar fuerte / no escuchar / estar enojado.</li><li>Finalizar con la actividad «Juego del micrófono», donde se asignan turnos para desarrollar una conversación o una discusión con diferentes tonos de voz a partir de una frase. ¿Cuál nos hace sentir mejor?</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro</span><span class="mat">Micrófono</span><span class="mat">Ilustraciones con emociones</span></div>`
+},
+{id:8,titulo:'¿Hacia dónde voy?',libro:'Si ves pasar un cóndor',autor:'Carlos Ocampo',nivel:'multi',duracion:'3 sesiones de 40–50 minutos',area:'Libertad, imaginación y naturaleza',
+meta:{Libro:'Si ves pasar un cóndor',Autor:'Carlos Ocampo',Nivel:'Preescolar (3.°) y Primaria (1.° – 3.°)','Duración total':'3 sesiones de 40–50 minutos'},
+html:`
+<h3>Propósito general</h3>
+<p>Que las niñas y los niños comprendan y reflexionen sobre los conceptos que aborda el libro: libertad, esperanza, observación, imaginación, naturaleza y emociones, desarrollando la escucha activa, expresión oral, creatividad y pensamiento reflexivo.</p>
+<h3>Sesión 1 — Antes y durante la lectura (40–50 min.)</h3>
+<h4>Actividad 1: Observamos y anticipamos (10 min.)</h4>
+<ul><li>Mostrar la portada sin leer el título.</li><li>Preguntas guía: ¿Qué ves? ¿Qué animal es? ¿Qué crees que pasará en la historia?</li></ul>
+<h4>Actividad 2: Lectura compartida (20 min.)</h4>
+<ul><li>Lectura en voz alta, pausada.</li><li>Hacer pequeñas pausas para preguntar: ¿Qué creen que siente el personaje? ¿Por qué creen que aparece el cóndor?</li></ul>
+<h4>Actividad 3: Primer diálogo (10–15 min.)</h4>
+<ul><li>Conversación grupal: ¿Qué parte te gustó más? ¿Cómo te sentiste al escuchar la historia?</li><li>Cierre breve: «El libro no explica todo… a veces nos invita a imaginar».</li></ul>
+<h3>Sesión 2 — Exploramos los significados (40–50 min.)</h3>
+<h4>Actividad 1: ¿Qué representa el cóndor? (10 min.)</h4>
+<ul><li>Mostrar imágenes de aves.</li><li>¿Por qué creen que el autor eligió un cóndor y no otro animal? Introducir ideas como libertad, volar alto, mirar desde arriba.</li></ul>
+<h4>Actividad 2: Mi idea del cóndor (20 min.)</h4>
+<ul><li>Cada niño dibuja: «Para mí, el cóndor significa…»</li><li>Los más pequeños pueden explicarlo oralmente; los mayores pueden escribir una frase.</li></ul>
+<h4>Actividad 3: Compartimos (10–15 min.)</h4>
+<ul><li>Algunos alumnos muestran su dibujo.</li><li>El docente rescata palabras clave en el pizarrón: libertad, sueños, volar, esperanza, naturaleza.</li></ul>
+<h3>Sesión 3 — Creamos y reflexionamos (40–50 min.)</h3>
+<h4>Producto final — «Cuando yo veo pasar un cóndor…» (25 min.)</h4>
+<ul><li>Un dibujo + frase o un mini mural grupal.</li><li>La frase puede iniciar con: «Cuando yo veo pasar un cóndor, pienso en…» o «El cóndor me hace sentir…»</li></ul>
+<h4>Exposición sencilla (10 min.)</h4>
+<ul><li>Se colocan los trabajos en el aula.</li><li>Caminata silenciosa para observarlos.</li></ul>
+<h4>Reflexión final (10–15 min.)</h4>
+<ul><li>¿Todos pensamos lo mismo al leer el mismo libro? ¿Está bien sentir cosas diferentes? ¿Qué nos enseñó el cóndor sin hablar?</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro Si ves pasar un cóndor</span><span class="mat">Imágenes de aves (cóndor y otras)</span><span class="mat">Cartulina o papel bond, colores, crayones, plumones</span><span class="mat">Tijeras y pegamento</span><span class="mat">Música suave (opcional)</span><span class="mat">Hojas blancas, cinta adhesiva</span></div>`
+},
+{id:9,titulo:'Entre palabras y silencios',libro:'Un libro triste',autor:'Michael Rosen',nivel:'secundaria',duracion:'65 min. (suma de actividades)',area:'Salud emocional y duelo',
+meta:{Libro:'Un libro triste',Autor:'Michael Rosen',Participantes:'Grupo clase',Duración:'65 min. (suma de actividades)',Nivel:'Secundaria / Preparatoria'},
+html:`
+<h3>Reseña</h3>
+<p>Un libro triste es una obra breve pero profundamente emotiva en la que Michael Rosen aborda el tema del duelo desde una perspectiva honesta y directa. El autor narra su experiencia tras la pérdida de su hijo, mostrando que la tristeza no siempre es visible ni constante, pero sí real y persistente. A través de un lenguaje sencillo y de ilustraciones aparentemente infantiles, el libro rompe con la idea de que las emociones dolorosas deben ocultarse, invitando al lector a reconocer, aceptar y nombrar la tristeza como parte de la experiencia humana.</p>
+<h3>Propósito</h3>
+<ul><li>Analizar el texto literario como una expresión auténtica de las emociones humanas.</li><li>Reflexionar sobre el duelo, la tristeza y la importancia de hablar sobre la salud emocional.</li><li>Desarrollar empatía y pensamiento crítico a partir de la lectura.</li><li>Expresar ideas y emociones propias mediante actividades escritas y reflexivas.</li></ul>
+<h3>Actividades</h3>
+<h4>1. Activación de conocimientos previos (10 min.)</h4>
+<p>En plenaria, responder de forma voluntaria: ¿Crees que está bien mostrar tristeza en público? ¿Por qué muchas personas esconden lo que sienten? El docente registra ideas clave en el pizarrón.</p>
+<h4>2. Comprensión y análisis (20 min.)</h4>
+<ul><li>Lectura guiada del libro (individual o en voz alta).</li><li>Subrayar frases que llamen la atención o generen emociones.</li><li>Responder por escrito: ¿Qué tipo de tristeza expresa el autor? ¿Por qué el narrador dice que a veces «finge estar bien»? ¿Qué papel juegan las ilustraciones en la historia?</li></ul>
+<h4>3. Reflexión crítica (15 min.)</h4>
+<ul><li>En equipos pequeños, dialogar sobre: ¿Por qué este libro, aunque parece infantil, no lo es? ¿Qué mensaje deja sobre el duelo y la sociedad?</li><li>Elaborar una conclusión grupal de máximo cinco líneas.</li></ul>
+<h4>4. Producción personal (20 min.)</h4>
+<ul><li>Escribir un texto breve titulado: «Cuando la tristeza no se ve».</li><li>Crear una ilustración simbólica que represente una emoción difícil, acompañada de un párrafo explicativo.</li></ul>
+<p class="nota">Reflexión final: Un libro triste nos recuerda que sentir tristeza no es una debilidad, sino una experiencia humana legítima. Hablar de lo que duele también es una forma de sanar.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Un libro triste (Michael Rosen)</span><span class="mat">Hojas blancas</span><span class="mat">Lápices o bolígrafos</span></div>`
+},
+{id:10,titulo:'Un día muy especial',libro:'Un día muy especial',autor:'José Sanabria',nivel:'multi',duracion:'50 min.',area:'Emociones y memoria personal',
+meta:{Libro:'Un día muy especial',Autor:'José Sanabria',Participantes:'20–25',Duración:'50 min.',Nivel:'Alumnos a partir de los 8 años','Adaptable para':'Preescolar, primaria, secundaria, taller literario o biblioteca'},
+html:`
+<h3>Reseña</h3>
+<p>Un día muy especial, de José Sanabria, es un relato sensible que invita a reflexionar sobre cómo los acontecimientos cotidianos y las emociones pueden convertir un día común en una experiencia significativa. A través de una narración cercana, el autor muestra la importancia de los recuerdos, los sentimientos y las vivencias personales, facilitando la identificación del lector y fomentando la reflexión emocional.</p>
+<h3>Desarrollo</h3>
+<ul><li>Dar la bienvenida al grupo y propiciar una charla inicial: ¿Qué hace que un día sea «muy especial»? ¿Recuerdan algún día importante en su vida? ¿Puede un día común volverse especial? ¿Por qué?</li><li>Proponer la lectura del libro. Puede realizarse de manera individual, en voz alta por el mediador o de forma compartida.</li><li>Generar después de la lectura una conversación guiada: ¿Qué sucede en la historia? ¿Cómo se siente el personaje principal? ¿Qué emociones aparecen a lo largo del relato? ¿Se identifican con alguna situación?</li><li>Invitar a los participantes a realizar una actividad creativa a partir de detonadores: recordar un día importante; narrar un momento inesperado; describir una emoción intensa; contar un recuerdo familiar; imaginar un día especial que aún no haya ocurrido.</li><li>Pedir que elaboren una producción propia: un breve texto narrativo, un dibujo acompañado de palabras, una carta o un relato corto titulado «Un día muy especial».</li><li>Concluir la sesión con la socialización de los trabajos y una reflexión final sobre la importancia de las experiencias cotidianas y las emociones.</li></ul>
+<h3>Actividad dinámica y creativa — El semáforo de las emociones</h3>
+<ul><li>Entregar a cada participante tres tarjetas o círculos de colores: verde, amarillo y rojo.</li><li>Después de la lectura del cuento, el mediador irá mencionando distintos momentos de la historia.</li><li>Los participantes levantarán el color que represente cómo se sintió el personaje: verde = alegría o tranquilidad; amarillo = sorpresa, duda o nervios; rojo = tristeza, enojo o miedo.</li><li>Cada alumno elegirá un momento del cuento y explicará por qué eligió ese color.</li><li>Para cerrar, relacionarán esa emoción con alguna experiencia personal o imaginarán cómo cambiaría la historia si el personaje tomara otra decisión.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas de papel bond o fichas de trabajo</span><span class="mat">Lápices</span><span class="mat">Colores o marcadores (opcional)</span></div>`
+},
+{id:11,titulo:'Las cosas que se mueven en mí',libro:'¡Julieta, estate quieta!',autor:'Rosemary Wells',nivel:'primaria',duracion:'90–120 minutos',area:'Identidad y expresión emocional',
+meta:{Libro:'¡Julieta, estate quieta!',Autor:'Rosemary Wells',Participantes:'20–25',Duración:'90–120 minutos',Nivel:'Niñas y niños a partir de 6 años',Modalidad:'Lectura, reflexión, exploración corporal y creación artística'},
+html:`
+<h3>Propósito</h3>
+<p>Invitar a las y los participantes a explorar sus emociones, impulsos y movimientos internos —aquello que no siempre puede «estarse quieto»— a partir de la identificación con Julieta y su mundo cotidiano.</p>
+<h3>Trama principal</h3>
+<p>La historia sigue a Julieta, una pequeña ratoncita que se siente ignorada por sus padres porque es la hija del medio. Se enfoca en temas centrales como los celos fraternales, la identidad y el amor incondicional.</p>
+<h3>Desarrollo</h3>
+<ul><li>Da la bienvenida al grupo y pídeles que se sienten en círculo, en un espacio donde puedan moverse libremente. Comienza con una pregunta detonadora: ¿Alguna vez te han dicho «estate quieto» cuando sentías que tu cuerpo o tu mente querían moverse?</li><li>Realiza la lectura en voz alta, mostrando las ilustraciones y permitiendo pausas para observar gestos, posturas y emociones del personaje.</li><li>Después de la lectura, propicia una breve conversación: ¿Cómo se siente Julieta cuando le piden que se esté quieta? ¿Qué cosas la hacen moverse, saltar, imaginar? ¿En qué momentos tú te sientes como Julieta?</li><li>Invita a los participantes a hacer una lista (dibujada o escrita) de cosas que los hacen moverse (emociones, ideas, ganas, sonidos, recuerdos) y cosas que los hacen quedarse quietos (miedo, reglas, cansancio, tristeza, silencio).</li><li>Presenta una caja de materiales y pídeles que exploren libremente los objetos. Deberán elegir objetos que representen lo que no puede estarse quieto dentro de ellos y objetos que representen lo que los detiene o los calma.</li><li>Invítalos a crear una escena, collage o pequeño diorama titulado: «Lo que se mueve en mí». Pueden combinar materiales, dibujos, palabras y colores.</li><li>Para cerrar, organiza una exposición. Cada participante presentará su creación con una frase, poema o breve explicación.</li></ul>
+<p class="nota">Cierre: Concluye reforzando la idea de que no todo lo que se mueve es malo, y que reconocer nuestras emociones, energía y creatividad, como Julieta, es una forma de conocernos mejor.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cajas pequeñas (una por participante) o cartulinas</span><span class="mat">Papeles de colores, revistas para recortar</span><span class="mat">Tijeras, pegamento, plumones, crayones</span><span class="mat">Hilos, telas, ligas, botones, objetos pequeños</span><span class="mat">Música suave (opcional, para el momento creativo)</span></div>`
+},
+{id:12,titulo:'Las preguntas que me habitan',libro:'La gran pregunta',autor:'Wolf Erlbruch',nivel:'multi',duracion:'90–120 minutos',area:'Filosofía para niñas y niños',
+meta:{Libro:'La gran pregunta',Autor:'Wolf Erlbruch',Participantes:'20–25',Duración:'90–120 minutos',Nivel:'A partir de 8 años',Modalidad:'Lectura compartida, diálogo filosófico, escritura creativa y producción visual',Enfoque:'Filosofía para niñas y niños, educación emocional, pensamiento crítico y creativo'},
+elaborado:'Mtra. Julissa Varela H., Mtra. Lila Santos G., Mtra. Judith Lozano, Dra. Irma Valverde.',
+html:`
+<h3>Propósito</h3>
+<p>Acompañar a las y los participantes a explorar las preguntas que los habitan —sobre la vida, el sentido, el amor, el miedo y la existencia— reconociendo que no siempre hay una sola respuesta y que preguntar también es una forma de estar en el mundo.</p>
+<h3>Desarrollo</h3>
+<h4>1. Apertura: el valor de preguntar</h4>
+<ul><li>Recibe al grupo en círculo. Sin dar explicaciones, escribe en el centro del espacio una pregunta grande: ¿Para qué estamos aquí?</li><li>Pide que observen la pregunta en silencio durante un minuto. Luego pregunta: ¿Cómo se siente una pregunta cuando no se responde? ¿Las preguntas pesan, acompañan, incomodan?</li></ul>
+<h4>2. Lectura dialogada</h4>
+<ul><li>Lee en voz alta La gran pregunta de Wolf Erlbruch, mostrando las ilustraciones.</li><li>Detén la lectura brevemente después de algunas respuestas y pregunta: ¿Esta respuesta te gusta? ¿Te sorprende? ¿Crees que podría ser cierta?</li></ul>
+<h4>3. Mapa de preguntas</h4>
+<ul><li>Entrega una hoja en blanco a cada participante.</li><li>En el centro, escribe o dibuja una pregunta que te habite (no necesariamente «la gran pregunta»).</li><li>Alrededor, agrega preguntas pequeñas, dudas, frases inconclusas, dibujos o símbolos. Este mapa no debe «explicarse», solo existir.</li></ul>
+<h4>4. Las voces que responden</h4>
+<ul><li>Si alguien más respondiera a tu pregunta, ¿quién sería? (Un animal, un objeto, una emoción, una persona imaginaria, la naturaleza.)</li><li>Cada participante escribe o dibuja una respuesta posible desde esa voz elegida. No debe ser una respuesta «correcta», sino honesta o poética.</li></ul>
+<h4>5. Objeto-pregunta</h4>
+<ul><li>Presenta una mesa con diversos materiales.</li><li>Pide que elijan un objeto que represente su pregunta o cómo se siente vivir con ella.</li><li>Con ese objeto, crearán una pequeña instalación o ensamblaje que no explique, sino sugiera.</li></ul>
+<h4>6. Galería del asombro</h4>
+<ul><li>Organiza una exposición silenciosa con el mapa de preguntas, la respuesta elegida y el objeto-pregunta.</li><li>Invita al grupo a recorrerla sin hablar, como si estuvieran en un museo de preguntas.</li></ul>
+<h4>7. Cierre colectivo</h4>
+<ul><li>En círculo, cada uno completa una frase (oral o escrita): «Una pregunta que me acompaña es…» y «Hoy entendí que preguntar también sirve para…».</li><li>Cierra recordando que vivir no siempre es responder, sino aprender a convivir con las preguntas.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas blancas, lápices, plumones, colores</span><span class="mat">Objetos diversos: piedras, papeles, telas, hilos, cartón, etc.</span><span class="mat">Pegamento, cinta</span><span class="mat">Mesa o espacio para exhibición</span></div>`
+},
+{id:13,titulo:'El tránsito de los recuerdos',libro:'Cuando el yayo era pequeño',autor:'Lilli Messina',nivel:'adultos',duracion:'60 min.',area:'Memoria intergeneracional',
+meta:{Libro:'Cuando el yayo era pequeño',Autor:'Lilli Messina',Participantes:'25',Duración:'60 min.',Nivel:'Jóvenes y adultos (adaptable a niños para fomentar el diálogo intergeneracional)'},
+elaborado:'Mtra. Judith Lozano, Mtra. Julieta Irigoyen, Mtra. Lila Santos, Mtra. Julissa Varela, Mtra. Fátima Luna, Mtra. Lucero Macías, Dra. Irma Valverde.',
+html:`
+<h3>Propósito</h3>
+<p>Esta actividad busca que los participantes transiten por el espacio físico mientras transitan por los recuerdos de su propia infancia o de sus antepasados, inspirados por el relato del «yayo».</p>
+<h3>Desarrollo</h3>
+<h4>1. Inicio y desplazamiento</h4>
+<ul><li>Pide al grupo que se sitúe al centro del espacio.</li><li>Indica que leerás fragmentos del libro de Lilli Messina. Mientras escuchan, deben caminar por el lugar, explorando el espacio sin alejarse demasiado para mantener la escucha.</li></ul>
+<h4>2. La lectura y el encuentro</h4>
+<ul><li>Lee un fragmento donde el «yayo» describa algo cotidiano de su infancia (por ejemplo, cómo eran los juguetes o los baños antes).</li><li>Al terminar el fragmento, todos se detienen y buscan contacto visual con la persona más cercana. Regla de oro: no repetir compañero en cada ronda.</li></ul>
+<h4>3. Intercambio de memorias</h4>
+<ul><li>La consigna: «Al mirar a tu compañero, comparte un recuerdo de tu propia infancia o una historia que te contaba tu abuelo/a que haya venido a tu mente con la lectura».</li><li>Deben mantener el contacto visual mientras narran su anécdota.</li><li>Cada persona tiene dos minutos para hablar.</li></ul>
+<h4>4. Uso de objetos</h4>
+<ul><li>Entre lecturas, invita a los participantes a acercarse a la «caja de materiales» (canicas, telas, ramas). Deben elegir un objeto que sientan que «pertenece» al mundo del yayo o al suyo propio para sostenerlo durante el siguiente tránsito.</li></ul>
+<h4>5. Cierre</h4>
+<ul><li>Repite la dinámica con tres o cuatro fragmentos del libro.</li><li>Finaliza invitando al grupo a sentarse en círculo para compartir cómo se sintieron al «viajar en el tiempo» y qué descubrieron de los recuerdos de los demás.</li><li>Para cerrar, utiliza las fichas bibliográficas para que cada participante escriba una frase breve que empiece con: «Cuando yo era pequeño...» o «Mi yayo me contaba que...». Estas fichas pueden colgarse en un «tendedero de la memoria» en el salón.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Objetos que evoquen el pasado: canicas, llaves antiguas, fotos en blanco y negro, retazos de tela</span><span class="mat">Fichas bibliográficas y plumas</span></div>`
+},
+{id:14,titulo:'Poemas de los sentidos y la tierra',libro:'Poemas de olores / A la orilla del agua',autor:'Ester Madroñero (Ed. Panamericana) / Claudia M. Lee (Ed. Luna Libros)',nivel:'adultos',duracion:'60 min.',area:'Poesía y escritura creativa',
+meta:{'Acervo principal':'Poemas de olores — Ester Madroñero (Ed. Panamericana)','Acervo complementario':'A la orilla del agua y otros poemas de América Latina — Claudia M. Lee (Ed. Luna Libros)',Participantes:'25',Duración:'60 min.',Nivel:'Jóvenes y adultos'},
+html:`
+<h3>Propósito</h3>
+<p>Los participantes exploran la conexión entre el mundo sensorial (olores y naturaleza) y la lírica latinoamericana para la creación de textos propios. A través de la evocación y la memoria, se sensibilizan en la apreciación de la poesía contemporánea.</p>
+<h3>Reseña</h3>
+<p>Es una compilación de poemas latinoamericanos que explora la vida, la naturaleza y las luchas sociales a través de la voz de diversos poetas, mostrando desde tradiciones populares hasta reflexiones profundas sobre la vida y el espíritu aventurero, a menudo usando el agua como metáfora para la vida, la aventura o las dificultades.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<p>Se pide a los participantes que cierren los ojos mientras se rocía un poco de esencia natural (café, canela o flores) en el ambiente. Lee el poema principal de Poemas de olores de Ester Madroñero y pídeles que anoten en una tira de papel qué recuerdo les trajo ese aroma.</p>
+<h4>Exploración</h4>
+<p>Se reparten tarjetas con nombres de elementos naturales: agua, tierra, montaña. Lee un fragmento de A la orilla del agua y otros poemas de América Latina de Claudia M. Lee. Basándose en la lectura, describan una sensación física que les produzca el elemento que les tocó.</p>
+<h4>Intercambio</h4>
+<p>Se les pide a los participantes que intercambien sus notas de «aromas» con las de «sensaciones físicas». El reto será encontrar una palabra que conecte ambos conceptos y anotarla al reverso.</p>
+<h4>Creación</h4>
+<p>Seleccionen tres de las palabras o frases anotadas en sus tiras para formar el esqueleto de un pequeño poema.</p>
+<h4>Cierre</h4>
+<p>Utilizando los libros del acervo como referencia de estructura, cada participante deberá añadir conectores (verbos y adjetivos) para dar coherencia a su creación y compartirla en voz alta frente al grupo.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Tiras de papel de colores</span><span class="mat">Esencias naturales o elementos aromáticos</span><span class="mat">Bolígrafos o plumones</span></div>`
+},
+{id:15,titulo:'¡Tengo ganas de escribir!',libro:'Tengo ganas de...',autor:'Manuela Olten',nivel:'multi',duracion:'50 minutos',area:'Escritura creativa y humor',
+meta:{Libro:'Tengo ganas de...',Autor:'Manuela Olten',Participantes:'Grupos de hasta 25 personas de cualquier edad',Duración:'50 minutos',Objetivo:'Crear un instructivo literario basado en impulsos, deseos o necesidades cotidianas, utilizando el humor y la observación al estilo de Manuela Olten.'},
+html:`
+<h3>Propósito</h3>
+<p>El libro de Olten se caracteriza por mostrar los deseos impulsivos y naturales de los niños (como las ganas de hacer pipí), tratados con humor y sencillez. Usaremos esa misma energía para esta actividad.</p>
+<h3>El detonante (Inspiración)</h3>
+<p>Antes de escribir, recuerda cómo en el libro de Manuela Olten el protagonista siente una urgencia irreprimible. Piensa en algo que «tengas ganas de» hacer, pero que sea un poco absurdo o muy común.</p>
+<h4>Propuestas de temas (elige uno o propón el tuyo)</h4>
+<ul><li>Instrucciones para aguantarse las ganas de ir al baño.</li><li>Instrucciones para convencer a mamá de que me compre un helado.</li><li>Instrucciones para saltar en un charco sin salpicarse los calcetines.</li><li>Instrucciones para poner cara de «yo no fui».</li></ul>
+<h3>Desarrollo de la escritura</h3>
+<p>Usa el siguiente esquema para redactar tu instructivo. Recuerda que puedes explicar pasos que parecen obvios, pero de una manera poética o divertida.</p>
+<table class="tabla-instructivo">
+<tr><th>Parte del instructivo</th><th>Tu contenido</th></tr>
+<tr><td>Título</td><td>Instrucciones para...</td></tr>
+<tr><td>Gesto inicial</td><td>¿Qué es lo primero que siente el cuerpo?</td></tr>
+<tr><td>Pasos a seguir</td><td>1. &nbsp; 2. &nbsp; 3.</td></tr>
+<tr><td>Advertencia</td><td>¿Qué pasa si el plan falla?</td></tr>
+</table>
+<h3>El toque de Manuela Olten</h3>
+<p>En el libro, las ilustraciones dicen tanto como las palabras. En el recuadro de abajo, dibuja el momento de mayor «urgencia» o emoción de tu instructivo.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Esta ficha</span><span class="mat">Lápices de colores</span><span class="mat">Mucha imaginación</span></div>`
+},
+{id:16,titulo:'La tierra de los susurros (Preescolar)',libro:'La tierra de los susurros',autor:'CONAFE (Consejo Nacional de Fomento Educativo)',nivel:'preescolar',duracion:'3 sesiones',area:'Naturaleza e imaginación',
+meta:{Título:'La tierra de los susurros',Serie:'Literatura infantil',Editorial:'Consejo Nacional de Fomento Educativo (CONAFE)','Lugar de publicación':'México',Participantes:'22',Duración:'3 sesiones',Nivel:'Preescolar'},
+html:`
+<h3>Propósito</h3>
+<ul><li>Que los niños disfruten la literatura como medio para explorar emociones, valores y la naturaleza.</li><li>Desarrollar habilidades de imaginación, expresión oral y artística a través de actividades lúdicas y creativas.</li></ul>
+<h3>Introducción</h3>
+<p>La tierra de los susurros es un libro que invita a los pequeños a descubrir un mundo natural lleno de misterio y sensibilidad. A través de ilustraciones y narraciones sencillas, los niños se acercan a la naturaleza y aprenden a escuchar con el corazón. Este libro permite que los alumnos desarrollen la imaginación, la observación y la curiosidad, al mismo tiempo que se acercan al gusto por la lectura mediante una historia que combina fantasía, emoción y elementos del entorno natural.</p>
+<h3>Desarrollo</h3>
+<ul><li>Inicia preguntando a los niños: ¿Qué creen que son los «susurros»? ¿La naturaleza puede hablarnos? ¿Cómo creen que lo hace?</li><li>Muestra la portada del libro y pide que describan lo que ven con palabras sencillas.</li><li>Invita a los niños a imitar sonidos de la naturaleza (viento, agua, animales) para entrar en ambiente.</li><li>Realiza la lectura en voz alta de fragmentos cortos, usando gestos y cambios de voz para captar su atención.</li><li>Después de la lectura, pregunta: ¿Qué parte les gustó más? ¿Qué personajes o elementos recuerdan? ¿Qué creen que significan los «susurros»?</li></ul>
+<h3>Procedimiento (actividades)</h3>
+<h4>Actividad 1 — El mural de los susurros</h4>
+<p>Cada niño pinta o dibuja en una hoja lo que imagina que la naturaleza le susurra. Se pegan todos en un mural colectivo y se observa como un gran bosque de ideas.</p>
+<h4>Actividad 2 — Escenas vivientes</h4>
+<p>En pequeños grupos, los niños representan con su cuerpo un elemento del cuento: árboles que se mueven, viento que sopla, animales que caminan. Los demás adivinan qué es.</p>
+<h4>Actividad 3 — Caja mágica de los secretos</h4>
+<p>Se coloca una caja decorada en el salón. Cada niño guarda dentro un dibujo o símbolo de lo que cree que la naturaleza le dice. Luego, se sacan algunos y se comentan en grupo.</p>
+<h4>Actividad 4 — Susurros ilustrados</h4>
+<p>Los niños dibujan con crayones o colores la parte del cuento que más les gustó. Se colocan los dibujos en un camino dentro del aula y se recorre como si fueran huellas de susurros.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas blancas y de colores</span><span class="mat">Crayones, marcadores, pinturas</span><span class="mat">Caja decorada</span><span class="mat">Telas o pañuelos para dramatización</span></div>`
+},
+{id:17,titulo:'La tierra de los susurros (Secundaria)',libro:'La tierra de los susurros',autor:'CONAFE',nivel:'secundaria',duracion:'3 sesiones',area:'Naturaleza e interpretación simbólica',
+meta:{Título:'La tierra de los susurros',Serie:'Literatura infantil',Editorial:'CONAFE','Lugar de publicación':'México',Género:'Literatura infantil / Narrativa',Participantes:'28',Duración:'3 sesiones',Nivel:'Secundaria'},
+html:`
+<h3>Propósito</h3>
+<ul><li>Que los estudiantes reconozcan la importancia de la literatura como medio para explorar emociones, valores y problemáticas humanas.</li><li>Desarrollar habilidades de interpretación y expresión a través de actividades narrativas, gráficas y reflexivas.</li></ul>
+<h3>Introducción</h3>
+<p>La tierra de los susurros es un libro de literatura infantil que invita a los lectores a adentrarse en un mundo natural lleno de misterio, imaginación y sensibilidad. A través de ilustraciones sugerentes y una narración simbólica, la obra despierta la curiosidad por la naturaleza y por aquello que no siempre se ve, pero se puede sentir y escuchar.</p>
+<h3>Desarrollo</h3>
+<ul><li>Inicia preguntando a los alumnos: ¿Qué creen que significa «los susurros»? ¿La naturaleza puede hablarnos? ¿De qué manera? ¿Alguna vez han sentido que un lugar guarda secretos?</li><li>Muestra la portada del libro y pide a los alumnos que describan lo que observan, imaginen de qué tratará la historia e identifiquen las emociones que les transmite la ilustración.</li><li>Realiza la lectura en voz alta de algunos fragmentos del libro, cuidando el tono y el ritmo para generar interés.</li><li>Invita a los alumnos a compartir: ¿Qué parte les llamó más la atención? ¿Qué personajes o elementos naturales recuerdan? ¿Qué creen que representan los «susurros» dentro de la historia?</li></ul>
+<h3>Procedimiento (actividades)</h3>
+<h4>Actividad 1 — El mural de los susurros</h4>
+<p>Cada alumno escribe en una hoja una frase corta como si fuera un «susurro de la tierra» y la pega en un mural colectivo. Al final, se lee en voz alta como si fuera un gran poema.</p>
+<h4>Actividad 2 — Escenas vivientes</h4>
+<p>En equipos, los alumnos crean una «escultura humana» que represente un momento del libro. Los demás deben interpretar qué escena es.</p>
+<h4>Actividad 3 — Caja de los secretos</h4>
+<p>Se coloca una caja en el salón. Cada alumno escribe en un papel un secreto o mensaje que cree que la naturaleza guarda. Luego, se leen algunos al azar y se relacionan con la historia.</p>
+<h4>Actividad 4 — Susurros ilustrados</h4>
+<p>Los estudiantes dibujan un símbolo o imagen que represente lo que más les impactó del libro. Después, se colocan todos los dibujos en un «camino de susurros» en el aula.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cuaderno, hojas de máquina, hojas de colores</span><span class="mat">Marcadores, colores</span></div>`
+},
+{id:18,titulo:'La familia de Tana (Preescolar)',libro:'La familia de Tana',autor:'Aline Pettersson / il. Verónica Leite · Alfaguara',nivel:'preescolar',duracion:'5 sesiones',area:'Valores y familia',
+meta:{Título:'La familia de Tana',Autora:'Aline Pettersson',Ilustraciones:'Verónica Leite',Serie:'Alfaguara Infantil',Editorial:'Alfaguara','Lugar de publicación':'México',Género:'Literatura infantil / Narrativa',Participantes:'20',Duración:'5 sesiones',Nivel:'Preescolar'},
+html:`
+<h3>Propósito</h3>
+<ul><li>Que los niños reconozcan la importancia de la familia y los valores como el amor, la cooperación y la unión.</li><li>Desarrollar habilidades de expresión oral, artística y social mediante actividades lúdicas.</li></ul>
+<h3>Introducción</h3>
+<p>La familia de Tana es un relato que muestra la vida de una pequeña nutria y su familia. A través de situaciones cotidianas, los niños descubren la importancia de convivir en armonía y ayudarse unos a otros. Este libro permite que los alumnos desarrollen la imaginación, la observación y la reflexión mediante una historia tierna y divertida.</p>
+<h3>Desarrollo</h3>
+<ul><li>Forma un círculo y pide a cada niño que diga una palabra que relacione con «familia».</li><li>Muestra ilustraciones del libro y pregunta: ¿Qué ven? ¿Qué creen que está pasando?</li><li>Realiza la lectura en voz alta con dramatización y gestos.</li><li>Después de la lectura, pregunta: ¿Qué hace feliz a la familia de Tana? ¿Qué cosas hacen juntos?</li></ul>
+<h3>Procedimiento (actividades)</h3>
+<h4>Actividad 1 — El árbol de Tana</h4>
+<p>En grupos, dibujan un gran árbol en cartulina. Cada rama representa un valor: amor, respeto, cooperación. Los niños pegan hojas de papel con dibujos de cómo viven esos valores en su familia.</p>
+<h4>Actividad 2 — Historias encadenadas</h4>
+<p>Cada niño dice una frase inventada sobre la familia de Tana. Entre todos se arma un cuento oral colectivo.</p>
+<h4>Actividad 3 — Teatro de sombras</h4>
+<p>Con cartulina y lámparas, los niños elaboran siluetas simples de los personajes y representan una escena del cuento.</p>
+<h4>Actividad 4 — El diario de Tana</h4>
+<p>Cada niño dibuja en una hoja lo que cree que Tana haría en un día con su familia. Luego lo cuentan en voz alta.</p>
+<h4>Actividad 5 — Feria de valores</h4>
+<p>Los grupos preparan un cartel con dibujos donde muestran el valor que más les gustó de la historia y cómo lo viven en casa.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cartulinas, plumones, tarjetas, cinta adhesiva</span><span class="mat">Hojas de colores, crayones</span><span class="mat">Lámparas pequeñas</span></div>`
+},
+{id:19,titulo:'La familia de Tana (Secundaria)',libro:'La familia de Tana',autor:'Aline Pettersson / il. Verónica Leite · Alfaguara',nivel:'secundaria',duracion:'5 sesiones',area:'Valores y debate crítico',
+meta:{Título:'La familia de Tana',Autora:'Aline Pettersson',Ilustraciones:'Verónica Leite',Serie:'Alfaguara Infantil',Editorial:'Alfaguara',Participantes:'28',Duración:'5 sesiones',Nivel:'Secundaria'},
+html:`
+<h3>Propósito</h3>
+<ul><li>Que los estudiantes reconozcan la importancia de la literatura como medio para reflexionar sobre la vida familiar, la cooperación y los valores comunitarios.</li><li>Desarrollar habilidades de interpretación y expresión a través de actividades narrativas, gráficas y reflexivas.</li></ul>
+<h3>Desarrollo</h3>
+<ul><li>Rompehielos inicial: forma un círculo y pide a cada estudiante que comparta una palabra que relacione con «familia». Escribe todas en el pizarrón para crear un «mural de palabras».</li><li>Lectura dramatizada: divide a los alumnos en pequeños grupos y entrégarles fragmentos del libro. Cada grupo debe leer en voz alta con entonación, como si fueran los personajes.</li><li>Juego de roles: después de la lectura, los grupos representan una escena inventada de la familia de Tana, agregando diálogos propios.</li><li>Debate creativo: plantea la pregunta ¿Qué valores hacen que una familia funcione? Los alumnos deben defender su respuesta con ejemplos del libro y de su vida cotidiana.</li><li>Dinámica de conexión: cada estudiante escribe en una tarjeta un valor que aprendió de la historia y lo coloca en un «árbol de valores» que se arma en el salón.</li></ul>
+<h3>Procedimiento (actividades)</h3>
+<h4>Actividad 1 — El árbol de Tana</h4>
+<p>En grupos, dibujan un gran árbol en cartulina. Cada rama representa un valor: amor, respeto, cooperación, unión. Los alumnos agregan hojas con ejemplos de cómo viven esos valores en su familia.</p>
+<h4>Actividad 2 — Historias encadenadas</h4>
+<p>Cada alumno escribe una frase sobre la familia de Tana en una hoja. Luego, se van pasando las hojas y cada compañero añade una nueva frase, creando un cuento colectivo.</p>
+<h4>Actividad 3 — Teatro de sombras</h4>
+<p>Con cartulina negra y lámparas, los alumnos elaboran siluetas de los personajes y representan una escena del libro como teatro de sombras.</p>
+<h4>Actividad 4 — El diario de Tana</h4>
+<p>Cada estudiante redacta una entrada de diario como si fuera Tana, contando un día en su vida y lo que aprendió de su familia.</p>
+<h4>Actividad 5 — Feria de valores</h4>
+<p>Al final, los grupos preparan un cartel o mini exposición donde expliquen qué valor consideran más importante en la historia y cómo aplicarlo en la vida real.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cartulinas, plumones, tarjetas, cinta adhesiva</span><span class="mat">Hojas de colores, crayones</span></div>`
+},
+{id:20,titulo:'Las causas del cambio climático',libro:'Cambio Climático',autor:'Robin Twiddy',nivel:'primaria',duracion:'60 minutos',area:'Ciencias / Formación Cívica y Ética',
+meta:{Libro:'Cambio Climático',Autor:'Robin Twiddy',Grado:'Sexto de primaria',Participantes:'Grupo clase (aprox. 25 alumnos)',Duración:'60 minutos',Área:'Ciencias / Formación Cívica y Ética'},
+html:`
+<h3>Propósito</h3>
+<p>Los participantes explorarán y comprenderán las principales causas del cambio climático a partir de situaciones cotidianas, identificando cómo las actividades humanas influyen en el aumento de gases de efecto invernadero.</p>
+<h3>Reseña</h3>
+<p>Explora la ciencia que hay detrás del cambio climático mediante un libro colorido y atractivo, que utiliza infografías para entregar información muy necesaria para entender la vida en el planeta. Aprende todo sobre el calentamiento global, el dióxido de carbono y El Niño, y averigua cómo los humanos estamos impactando el medioambiente y qué podemos hacer para contribuir a un futuro mejor.</p>
+<h3>Desarrollo</h3>
+<ul><li>Da la bienvenida al grupo y realiza una pregunta detonadora: ¿Han escuchado hablar del cambio climático? ¿Qué creen que lo provoca?</li><li>Presenta de manera breve el libro, explicando que en él se analizan las causas del cambio climático de forma clara y con ejemplos.</li><li>Realiza una lectura guiada sobre las principales causas: quema de combustibles fósiles (autos, fábricas); uso excesivo de electricidad; deforestación; producción de basura y consumo excesivo.</li><li>Muestra imágenes o ilustraciones que representen estas causas y pide a los alumnos que describan lo que observan.</li><li>Organiza al grupo en equipos de 4 o 5 integrantes.</li><li>Entrega a cada equipo una hoja de trabajo y solicita que elaboren una tabla sencilla con dos columnas: «Actividad cotidiana» y «¿Cómo contribuye al cambio climático?».</li><li>Pide a los equipos que escriban ejemplos cercanos a su vida diaria: uso del coche, prender luces, tirar basura.</li><li>Invita a cada equipo a compartir uno de sus ejemplos con el grupo.</li><li>Guía una reflexión grupal: ¿Qué causas del cambio climático dependen de las personas? ¿Cuáles podemos evitar o reducir?</li></ul>
+<h3>Actividad principal</h3>
+<ul><li>Cada equipo realizará un diorama que represente una de las causas del cambio climático: uso excesivo de automóviles, fábricas contaminantes, tala de árboles o acumulación de basura.</li><li>El diorama deberá incluir escenarios elaborados con materiales reciclados, elementos que representen la actividad humana causante y un letrero donde expliquen qué causa representa y por qué contribuye al calentamiento global.</li><li>Cada equipo presentará su diorama al grupo, explicando su contenido.</li></ul>
+<h3>Cierre</h3>
+<ul><li>Reflexión grupal: ¿Qué causa del cambio climático se repitió más en los dioramas? ¿Cuál creen que sea la más grave? ¿Qué acciones podemos realizar para disminuir estas causas?</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas blancas, lápices y colores</span><span class="mat">Imágenes impresas o proyección digital</span><span class="mat">Libro Cambio Climático de Robin Twiddy</span></div>`
+},
+{id:21,titulo:'Cómo medir y reducir la huella de carbono personal',libro:'Cambio Climático',autor:'Robin Twiddy',nivel:'multi',duracion:'125 min. (completa) / 60 min. (primaria)',area:'Ciencias / Educación ambiental',
+meta:{Libro:'Cambio Climático',Autor:'Robin Twiddy',Nivel:'Primaria y comunidad en general',Duración:'125 min. (versión completa) / 60 min. (versión primaria)',Escenario:'Salón de clases, centro comunitario o el que el grupo decida'},
+html:`
+<h3>Desarrollo (versión completa con tiempos sugeridos)</h3>
+<ul><li>Da la bienvenida al grupo. — 5 min.</li><li>Invítalos a discutir fragmentos del libro Cambio Climático de Robin Twiddy, enfocándose en las causas del cambio climático, el CO2, el efecto invernadero y cómo reducir la huella de carbono. Muestra imágenes o infografías que ilustren estos conceptos. — 15 min.</li><li>Pide a los participantes que centren su atención en las imágenes, el formato de los datos, el uso de unidades (kg de CO2) y los detalles de las actividades que contribuyen a las emisiones. — 10 min.</li><li>Reúnanse en equipos de cinco integrantes para crear una tabla de las principales categorías de emisiones que afectan a una persona o una escuela: transporte, energía, consumo de materiales y residuos. — 15 min.</li><li>En equipo definirán las características de sus hábitos de consumo para cada categoría. — 20 min.</li><li>Una vez establecidas las características de los hábitos y el lugar (escuela/hogar), es preciso identificar el conflicto y la trama de la historia. — 10 min.</li><li>Pide al equipo generar una escaleta o guion de la historia (máximo 10 cuadros). — 15 min.</li><li>Cada equipo representará en forma gráfica la historia que creó en hojas tamaño carta. — 25 min.</li><li>Invita a los equipos a mostrar sus historias gráficas y formar un mural. — 10 min.</li></ul>
+<h3>Adecuación para nivel primaria (60 min.)</h3>
+<ul><li>Bienvenida y explicación breve del tema con preguntas guía: ¿qué es contaminar?, ¿cómo cuidamos el planeta? — 5 min.</li><li>Lectura guiada o explicación del docente apoyada con imágenes sobre el cambio climático y la huella de carbono. — 10 min.</li><li>Observación de imágenes e identificación de acciones que contaminan y que ayudan al planeta. — 10 min.</li><li>Trabajo en equipos pequeños (4–5 alumnos) para identificar hábitos cotidianos: transporte, luz, comida y basura. — 10 min.</li><li>Elaboración de una historia sencilla (inicio–problema–solución) sobre cómo reducir la huella de carbono. — 10 min.</li><li>Dibujo de la historia en hojas tamaño carta, una escena por hoja. — 10 min.</li><li>Exposición breve de los equipos y cierre con reflexión grupal. — 5 min.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Hojas blancas y negras</span><span class="mat">Pegamento</span><span class="mat">Lápices y bolígrafos</span><span class="mat">Calculadora de huella de carbono (opcional, se puede usar una en línea)</span></div>`
+},
+{id:22,titulo:'Pequeña Mancha',libro:'Pequeñas manchas',autor:'(libro álbum)',nivel:'primaria',duracion:'1 sesión de 90 min.',area:'Autoestima, amistad, tolerancia y creatividad',
+meta:{Libro:'Pequeñas manchas',Sesión:'1 sesión de 90 min.','Valores a trabajar':'Autoestima, amistad, tolerancia y creatividad'},
+html:`
+<h3>Objetivo</h3>
+<p>Explorar la identidad personal, la aceptación de la diferencia y la expresión de emociones a través de las formas y colores. Que los alumnos logren reconocer y valorar su identidad personal, identificando sus propias cualidades y comprendiendo que las diferencias son enriquecedoras para la convivencia.</p>
+<h3>Reseña</h3>
+<p>Es un libro álbum que celebra la importancia de las diferencias y provee una atractiva introducción al arte moderno. Pequeña Mancha está aburrida en su rincón, pues no tiene con quién jugar. Su mamá la anima para que salga a buscar amigos. Pronto encuentra unas coloridas figuras que juegan juntas. El problema es que las figuras piensan que Pequeña Mancha es muy diferente... hasta que ella les revela su maravilloso secreto.</p>
+<h3>Desarrollo</h3>
+<h4>1. Actividades de comprensión (inicio)</h4>
+<ul><li>Antes de leer, mostrar la portada y preguntar: ¿Qué creen que es Pequeña Mancha? ¿Tiene cara? ¿Dónde vive?</li><li>Se comenzará la lectura y, cuando Pequeña Mancha se transforma para jugar con las otras formas, se detendrá la lectura y se les preguntará: ¿En qué se convertirá ahora?</li></ul>
+<h4>2. Actividades prácticas (desarrollo)</h4>
+<ul><li>Después de terminar la lectura se les preguntará: ¿qué palabras usaron las figuras geométricas para lastimar a Mancha? ¿Cómo reaccionó ella? ¿Cuál es el secreto que le enseñó su papá? ¿Por qué al final todos querían ser amigos de Mancha?</li><li>Se realizará la ficha de trabajo individual.</li></ul>
+<h4>3. Dinámica sensorial: El juego de las formas (cierre)</h4>
+<ul><li>Repartir recortes de cartulina de diferentes colores y formas: triángulos, cuadrados, círculos.</li><li>Poner música. Cuando la música pare, los niños deben agruparse por colores.</li><li>En la siguiente ronda, deben agruparse para formar una "figura mayor" (un castillo, un tren, una flor), tal como hace Pequeña Mancha con sus amigos.</li></ul>
+<h4>4. Reflexión final (cierre)</h4>
+<p>"Pequeña Mancha descubrió que tiene un tesoro dentro: la capacidad de transformarse. ¿Cuál es tu tesoro o qué es lo que mejor sabes hacer tú?" Dibujarlo o escribirlo en el cuaderno. Socializar el trabajo de los alumnos que deseen compartirlo.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Recortes de cartulina de diferentes colores y formas</span><span class="mat">Música (bocina o reproductor)</span><span class="mat">Cuaderno o ficha de trabajo individual</span><span class="mat">Lápices o plumones</span></div>`
+},
+{id:23,titulo:'¿Y tú te conoces?',libro:'El cuerpo humano por dentro',autor:'',nivel:'multi',duracion:'2 sesiones de 50 min.',area:'Cuerpo, emociones y comprensión lectora',
+meta:{Libro:'El cuerpo humano por dentro',Participantes:'Sin límite (se sugieren entre 15 y 20 aprox.)',Duración:'2 sesiones de 50 min.',Nivel:'A partir de los 10 años (adaptable a primaria, secundaria y preparatoria)'},
+html:`
+<h3>Propósito</h3>
+<p>Favorecer la identificación de los nombres técnicos del cuerpo humano y reconocer cómo se enlazan con las emociones. Fortalecer la comprensión lectora y la participación activa de manera lúdica.</p>
+<h3>Reseña</h3>
+<p>Al interior de tu cabeza, el cerebro es como un director de orquesta que hace que puedas relacionarte con el entorno que te rodea y que al mismo tiempo mantengas el equilibrio interno del cuerpo.</p>
+<h3>Desarrollo</h3>
+<ul><li>Presentación de la actividad y charla a partir del título del libro: ¿De qué tratará el libro titulado El cuerpo humano por dentro? ¿Recuerdan qué partes conforman su cuerpo y cómo se relacionan con sus emociones? ¿Qué emociones conocen y cuál consideran la más importante?</li><li>Dar a conocer todas las partes del cuerpo humano y enlazarlas con las emociones que los participantes mencionen.</li><li>Para la lectura, seccionar el grupo para que lean diferentes fragmentos del libro con distintos tonos emocionales en la voz.</li></ul>
+<h3>Conclusión</h3>
+<ul><li>Al azar se elegirán cuatro integrantes que cambiarán algunos contenidos del libro para adecuarlo a sus curiosidades.</li><li>Todos realizarán un mapa mental con las partes del libro que más les llamaron la atención.</li></ul>
+<h3>Cierre</h3>
+<p>Socialización de los trabajos y reflexión final sobre la importancia de las experiencias cotidianas y las emociones.</p>
+<p class="nota">Tip: Deja que los alumnos le den el toque que ellos requieran al libro. Entre más emociones y risas estén presentes, los alumnos disfrutarán más la lectura.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro en físico o digital</span><span class="mat">Colores o marcadores (opcional)</span><span class="mat">Hoja de máquina</span></div>`
+},
+{id:24,titulo:'No quiero ir a la escuela',libro:'No quiero ir a la escuela',autor:'Carles Cano · Bruño (Colección Chiquicuentos)',nivel:'prepa',duracion:'(sesión flexible)',area:'Desmotivación escolar y debate crítico',
+meta:{Libro:'No quiero ir a la escuela',Autor:'Carles Cano',Editorial:'Bruño (Colección Chiquicuentos)',Género:'Cuento infantil / Literatura Juvenil (adaptable)',Participantes:'15 a 30 alumnos',Nivel:'Preparatoria (adaptable a secundaria)',Materiales:'Libro (físico o digital), hojas de papel kraft, marcadores, post-its de colores'},
+html:`
+<h3>Propósitos</h3>
+<ul><li>Para el alumno: Identificar y expresar las causas subyacentes de la desmotivación escolar o la ansiedad ante el futuro, utilizando la literatura como un espejo para validar sus propias emociones.</li><li>Para el maestro: Facilitar un espacio de diálogo seguro donde se rompa el tabú del "deber ser" académico, permitiendo que los alumnos conecten con su lado humano y creativo mediante el análisis de textos.</li></ul>
+<h3>Reseña</h3>
+<p>El cuento narra la historia de un niño que, ante el inicio del ciclo escolar, manifiesta una resistencia absoluta a asistir a clase. A través de la narrativa, se exploran los miedos típicos, la pereza y la incertidumbre que genera el entorno escolar. Lo que parece una simple rabieta infantil es, en realidad, una puerta para hablar de la transición, la identidad y las expectativas que el mundo adulto deposita en los estudiantes.</p>
+<h3>Desarrollo</h3>
+<ul><li>Reescritura satírica: pedir a los alumnos que reescriban el cuento cambiando al protagonista niño por un estudiante de último semestre de preparatoria o un profesor exhausto.</li><li>Debate sobre el sistema: ¿Es la escuela un espacio de crecimiento o una imposición social?</li><li>Análisis de la resistencia: mapa mental sobre qué factores (sociales, económicos o personales) hacen que un joven no quiera ir a la escuela hoy en día.</li></ul>
+<h3>Tips para la aplicación</h3>
+<ul><li>Presenta la lectura como un "ejercicio deconstructivo". A los adolescentes les gusta analizar contenidos sencillos bajo una lente compleja.</li><li>Fomenta la honestidad: asegura que no habrá represalias por expresar desinterés real en ciertas materias; el objetivo es la introspección.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro (físico o digital)</span><span class="mat">Hojas de papel kraft</span><span class="mat">Marcadores</span><span class="mat">Post-its de colores</span></div>`
+},
+{id:25,titulo:'¿Dónde está mi cachorro?',libro:'¿Dónde está mi cachorro?',autor:'Elena Carbonell',nivel:'preescolar',duracion:'(sesión flexible)',area:'Primeros lectores · Empatía y cuidado animal',
+meta:{Libro:'¿Dónde está mi cachorro?',Autor:'Elena Carbonell',Nivel:'Primeros lectores (0 a 3 años)',Materiales:'Libro (físico o digital), hojas de papel kraft, marcadores, post-its de colores'},
+html:`
+<h3>Propósito</h3>
+<p>Fomentar la empatía y la comprensión lectora mediante la identificación de las emociones del protagonista, permitiendo que el estudiante reconozca la importancia del cuidado animal y la resolución de problemas en situaciones de pérdida.</p>
+<h3>Reseña</h3>
+<p>Un niño ha perdido a su perrito y emprende una búsqueda llena de curiosidad. Acompañamos al protagonista mientras explora diferentes rincones, preguntando y observando con la esperanza de encontrar a su fiel amigo.</p>
+<h3>Desarrollo — Ficha de trabajo</h3>
+<h4>Actividad 1: ¡Encuentra y cuenta!</h4>
+<p>Observa la imagen del jardín del libro. Algunos animales están escondidos detrás de los arbustos, las flores y las macetas. Ayúdanos a encontrarlos.</p>
+<ul><li>Observa bien la escena.</li><li>Cuenta cuántos animales de cada tipo encuentras.</li><li>Escribe el número (o haz marcas/palitos) en los cuadros indicados.</li></ul>
+<h4>Actividad 2: Dibujo predictivo</h4>
+<p>¿Cómo crees que se siente el cachorro? Realiza un dibujo que exprese su emoción.</p>
+<h4>Actividad 3: Mapa de búsqueda</h4>
+<p>Dibuja los lugares por donde pasó el protagonista durante su búsqueda.</p>
+<h4>Actividad 4: Mi compromiso</h4>
+<p>Escribe una frase corta sobre cómo cuidas o cuidarías a un cachorro.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Libro (físico o digital)</span><span class="mat">Hojas de papel kraft</span><span class="mat">Marcadores</span><span class="mat">Post-its de colores</span></div>`
+},
+{id:26,titulo:'Todos sentimos',libro:'¡NO!',autor:'Marta Altéz',nivel:'preescolar',duracion:'Mañana de trabajo',area:'Cuidado animal y empatía',
+meta:{Libro:'¡NO!',Autor:'Marta Altéz',Duración:'Mañana de trabajo',Materiales:'Video cuento ¡NO!, globos, cartulinas, plumones, imágenes reales de animales'},
+html:`
+<h3>Propósito</h3>
+<p>Que las niñas y los niños reconozcan la importancia de cuidar y respetar a los animales, desarrollando actitudes de empatía, responsabilidad y protección hacia los seres vivos en su entorno.</p>
+<h3>Reseña</h3>
+<p>Cuenta la historia de un perro muy entusiasta y bienintencionado que quiere ayudar a toda su familia en todo lo posible. Sin embargo, cada vez que intenta colaborar, recibe un gran "¡NO!", lo que le hace creer que su nombre es realmente ¡NO!.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<ul><li>¿Qué animales conocen? ¿Qué necesitan los animales para vivir? ¿Cuál es tu animal favorito? ¿Tienes mascotas? ¿Cómo los cuidas?</li><li>¿Qué animales has observado en la comunidad? ¿Has visto cómo tratan en la calle a los animales?</li></ul>
+<h4>Desarrollo</h4>
+<ul><li>Proyectar el video cuento.</li><li>Cuestionar: ¿Qué hace el perrito? ¿Crees que quiere ayudar? ¿Cómo se siente cuando le dicen ¡NO!?</li><li>Mostrar imágenes de animales maltratados y animales felices: ¿Cómo se sentirá este animal? ¿Qué le hace falta? ¿Cómo te sentirías tú si fueras ese animal?</li><li>Realizar con un globo un animal (el de su elección) e invitar a los alumnos a cuidarlo durante la mañana. Alternativa: llevar mascotas reales con apoyo de padres de familia.</li></ul>
+<h4>Cierre</h4>
+<ul><li>Reflexionar sobre la importancia de los cuidados de los animales.</li><li>Realizar carteles de concientización y campañas de adopción.</li></ul>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Video cuento ¡NO! (Marta Altéz)</span><span class="mat">Globos</span><span class="mat">Cartulinas, plumones</span><span class="mat">Imágenes reales de animales</span></div>`
+},
+{id:27,titulo:'Pequeños hábitos, grandes cuidados',libro:'Mugrosaurio',autor:'Pavel Brito',nivel:'preescolar',duracion:'Sesión de 40 minutos',area:'Higiene y salud',
+meta:{Libro:'Mugrosaurio',Autor:'Pavel Brito',Duración:'Sesión de 40 minutos',Materiales:'Cuento Mugrosaurio, agua, pimienta, charola, jabón'},
+html:`
+<h3>Propósito</h3>
+<p>Que los alumnos comprendan la importancia de la higiene personal como parte fundamental del cuidado de su salud y bienestar, y desarrollen hábitos saludables que les permitan sentirse bien consigo mismos y con los demás.</p>
+<h3>Reseña</h3>
+<p>"Mugrosaurio huele a queso entre sus grandes patotas, y tiene trozos de hueso en sus dientes y muelotas." ¿Qué tendrá que hacer Mugrosaurio para dejar de oler así? Acompaña a este personaje y descubre qué hizo para ser un saurio muy limpio.</p>
+<h3>Desarrollo</h3>
+<h4>Inicio</h4>
+<ul><li>¿Conocen los hábitos de higiene? ¿Qué hábitos llevas a cabo en casa? ¿Por qué creen que es importante?</li><li>Leer el cuento Mugrosaurio e iniciar una lluvia de ideas: ¿Qué tenía en los dientes Mugrosaurio? ¿Quién vivía en su cabello?</li></ul>
+<h4>Desarrollo — Experimento: Las bacterias en mis manos</h4>
+<ul><li>Proporcionar a cada alumno una charola con agua y un poco de pimienta (que representará las bacterias).</li><li>Explicar que durante el día las manos se llenan de bacterias. Guiar con cuestionamientos hasta llegar a la respuesta: lavar con agua y jabón.</li><li>Proporcionar jabón y explicar la técnica correcta del lavado de manos. Antes de enjuagar, introducir las manos en la charola con pimienta para observar lo que pasa.</li><li>¿Qué pasó? ¿Por qué no se pegaron las bacterias? ¿Qué pasaría si no tuvieras el jabón?</li></ul>
+<h4>Cierre</h4>
+<ul><li>Reflexionar sobre la importancia de los hábitos de higiene.</li></ul>
+<p class="nota">Recomendación: Realizar una tabla en el salón con los nombres de todos los alumnos y las partes del cuerpo que requieren cuidados (oídos, manos, cabello, uñas) y revisarla diariamente.</p>
+<h3>Materiales</h3>
+<div class="mats"><span class="mat">Cuento Mugrosaurio (Pavel Brito)</span><span class="mat">Agua, pimienta, charola</span><span class="mat">Jabón</span></div>`
+}
+];
+
+// ── RENDER GRID ──────────────────────────
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  const favs=getFavs();
+  let n=0;
+  FICHAS.forEach(f=>{
+    if(!match(f)) return;
+    n++;
+    const isFaved=favs.includes(f.id);
+    const div=document.createElement('div');
+    div.className=`card nv-${f.nivel}`;
+    div.innerHTML=`
+      <div class="cinta"></div>
+      <div class="cbody-wrap" style="position:relative">
+        <div class="cbody">
+          <div class="cnum">Ficha ${f.id}</div>
+          <div class="ctit">${f.titulo}</div>
+          <div class="clibro">📖 ${f.libro}${f.autor?' — '+f.autor:''}</div>
+          <div class="ctags">
+            <span class="tag t-${f.nivel}">${NOM[f.nivel]}</span>
+            <span class="tag t-dur">⏱ ${f.duracion}</span>
+            ${f.area?`<span class="tag t-area">${f.area}</span>`:''}
+          </div>
+        </div>
+        <button class="card-fav ${isFaved?'on':''}" data-id="${f.id}" onclick="event.stopPropagation();toggleFav(${f.id})" title="${isFaved?'Quitar de favoritas':'Marcar como favorita'}">${isFaved?'★':'☆'}</button>
+      </div>
+      <button class="cabrir" onclick="abrirFicha(${f.id})">Ver ficha completa →</button>`;
+    g.appendChild(div);
+  });
+  if(!n) g.innerHTML='<div class="vacio"><div style="font-size:2.5rem">📭</div><p style="margin-top:8px">No hay fichas con ese filtro.</p></div>';
+  document.getElementById('conteo').textContent=`${n} ficha${n!==1?'s':''}`;
+}
+
+function match(f){
+  if(soloFavs && !getFavs().includes(f.id)) return false;
+  if(fNivel!=='todos'){
+    const m={preescolar:['preescolar','multi'],primaria:['primaria','multi'],secundaria:['secundaria','multi'],prepa:['prepa','multi'],adultos:['adultos','multi']};
+    if(!m[fNivel].includes(f.nivel)) return false;
+  }
+  if(fBusq){
+    const q=fBusq.toLowerCase();
+    if(![f.titulo,f.libro,f.autor||'',f.area||''].some(s=>s.toLowerCase().includes(q))) return false;
+  }
+  return true;
+}
+
+function filtrar(btn){
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  fNivel=btn.dataset.val;
+  renderGrid();
+}
+function buscar(v){fBusq=v.trim();renderGrid()}
+
+// ── MODAL ────────────────────────────────
+function abrirFicha(id){
+  const f=FICHAS.find(x=>x.id===id);
+  if(!f) return;
+  modalFichaId=id;
+
+  const col=COL[f.nivel];
+  document.getElementById('mCinta').style.background=col;
+  document.getElementById('mNum').textContent=`Ficha ${f.id} · ${NOM[f.nivel]}`;
+  document.getElementById('mTit').textContent=f.titulo;
+  document.getElementById('mLibro').textContent=`${f.libro}${f.autor?' — '+f.autor:''}`;
+
+  // Ficha técnica
+  const metaRows=Object.entries(f.meta).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+
+  // Elaborado por
+  const elab=f.elaborado?`<div class="elaborado">Elaborado por: ${f.elaborado}</div>`:'';
+
+  // Meta pills
+  document.getElementById('mMeta').innerHTML=`<span class="meta-pill">⏱ ${f.duracion}</span>${f.area?`<span class="meta-pill">${f.area}</span>`:''}`;
+
+  // Favorito
+  const fav=isFav(id);
+  const mfb=document.getElementById('mFavBtn');
+  mfb.textContent=fav?'★':'☆';
+  mfb.classList.toggle('on',fav);
+
+  document.getElementById('mBody').innerHTML=`
+    <div class="ficha-content">
+      <h3>Ficha técnica</h3>
+      <table class="ftable">${metaRows}</table>
+      ${f.html}
+      ${elab}
+    </div>`;
+
+  document.getElementById('overlay').classList.add('vis');
+  document.body.style.overflow='hidden';
+}
+
+function cerrar(){
+  document.getElementById('overlay').classList.remove('vis');
+  document.body.style.overflow='';
+  modalFichaId=null;
+}
+function cerrarSiOverlay(e){if(e.target===document.getElementById('overlay'))cerrar()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrar()});
+
+renderGrid();
+</script>
+</body>
+</html>
